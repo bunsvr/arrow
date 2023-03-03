@@ -1,11 +1,18 @@
+import { loadStyle } from "./utils";
+
 function loadScript(props: {params?: string, script?: string}) {
-    return (props.params ? `<script async>window.params=${props.params}</script>` : "")
-        + (props.script ? `<script async defer type="module" src="${props.script}"></script>` : "");
+    return (props.params ? /*html*/`<script async>window.params = ${props.params}</script>` : "")
+        + (props.script ? /*html*/`<script async defer type="module" src="${props.script}"></script>` : "");
 }
 
 function loadStyles(style?: string) {
-    return (style ? `<link rel="stylesheet" href="${style}" media="print" class="__styles"/>` : "")
-        + `<script async defer>for(let e of document.getElementsByClassName("__styles"))e.media="all"</script>`;
+    return (style ?/*html*/`<link ${loadStyle(style)}/>` : "")
+        + /*html*/`
+            <script async defer>
+                for (let e of document.getElementsByClassName("__styles"))
+                    e.media="all"
+            </script>
+        `;
 }
 
 export interface Template {
@@ -26,7 +33,7 @@ export default {
         props.head ||= "";
         const params = props.params && JSON.stringify(props.params); 
     
-        return `<!DOCTYPE html>
+        return /*html*/`<!DOCTYPE html>
             <html lang="en">
                 <head>
                     <meta charset="utf-8" />

@@ -122,8 +122,10 @@ export class PageRouter extends PRouter {
                     sourceFile = keys[i];
 
                 // Get head
-                const head = await import(route.source.replace(outDir, srcDir))
+                let head = await import(route.source.replace(outDir, srcDir))
                     .then(v => v?.head);
+                if (typeof head === "function")
+                    head = await head();
 
                 // Get script
                 const script = pathUtils.resolve(sourceFile).replace(outDir, "");
@@ -133,16 +135,23 @@ export class PageRouter extends PRouter {
                     style = css && pathUtils.resolve(css).replace(outDir, "");
 
                 if (route.type === "static") {
-                    const tmpl = template.render({ script, style, head });
+                    const tmpl = template.render({
+                        script, style, head
+                    });
 
                     this.router.static("GET", route.path, () => new Response(tmpl, {
                         headers: { "content-type": "text/html" }
                     }));
                 } else
                     this.router.dynamic("GET", route.path, req =>
-                        new Response(template.render({ script, style, params: req.params.groups, head }), {
-                            headers: { "content-type": "text/html" }
-                        })
+                        new Response(
+                            template.render({
+                                script, style,
+                                params: req.params.groups, head
+                            }),
+                            {
+                                headers: { "content-type": "text/html" }
+                            })
                     );
             }
         }
@@ -161,5 +170,6 @@ export class PageRouter extends PRouter {
 }
 
 // Types
+export * from "./utils";
 export { Template };
 export type RenderFunction = () => ArrowTemplate;
