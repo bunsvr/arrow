@@ -22,7 +22,6 @@ export interface Template {
 }
 
 export default {
-    root: "body",
     render(props: {script?: string, style?: string, params?: Record<string, string>, head?: string}) {
         props.head ||= "";
         const params = props.params && JSON.stringify(props.params); 
