@@ -4,3 +4,8 @@ interface Window {
      */
     readonly params: Record<string, string>;
 }
+
+/**
+ * Parsed parameter
+ */
+declare const params: Record<string, string>;

@@ -6,7 +6,9 @@ import template, { Template } from "./template";
 import { existsSync } from "fs";
 import { appendFile, mkdir, rm } from "fs/promises";
 import { ArrowTemplate } from "@arrow-js/core";
+import { cssLoader, globalsLoader, opts, paramsScript, styleLoadScript } from "./constants";
 
+// Delete all files in a dir
 async function clearDir(dir: string) {
     if (existsSync(dir))
         await rm(dir, { recursive: true });
@@ -14,6 +16,7 @@ async function clearDir(dir: string) {
     await mkdir(dir);
 }
 
+// Build script
 async function build(entries: string[], out: string, build: esbuild.BuildOptions) {
     return esbuild.build({
         minify: true,
@@ -28,6 +31,7 @@ async function build(entries: string[], out: string, build: esbuild.BuildOptions
     });
 }
 
+// Create files to render stuff
 async function createFiles(routes: Route[], out: string, src: string, template: Template) {
     const paths = [];
 
@@ -47,6 +51,7 @@ async function createFiles(routes: Route[], out: string, src: string, template: 
     return paths;
 }
 
+// Route 
 type Route = {
     source: string,
     type: "static",
@@ -137,22 +142,26 @@ export class PageRouter extends PRouter {
                 if (route.type === "static") {
                     const tmpl = template.render({
                         script, style, head
-                    });
+                    })
+                        .replace(globalsLoader, "")
+                        .replace(cssLoader, styleLoadScript);
 
-                    this.router.static("GET", route.path, () => new Response(tmpl, {
-                        headers: { "content-type": "text/html" }
-                    }));
-                } else
+                    this.router.static("GET", route.path, () => 
+                        new Response(tmpl, opts));
+                } else {
+                    const tmpl = template.render({
+                        script, style, head
+                    }).replace(cssLoader, styleLoadScript);
+
                     this.router.dynamic("GET", route.path, req =>
                         new Response(
-                            template.render({
-                                script, style,
-                                params: req.params.groups, head
-                            }),
-                            {
-                                headers: { "content-type": "text/html" }
-                            })
+                            tmpl.replace(
+                                globalsLoader, 
+                                paramsScript(req.params)
+                            ), opts
+                        )
                     );
+                }
             }
         }
 

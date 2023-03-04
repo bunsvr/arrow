@@ -4,21 +4,20 @@
   "type": "module",
   "description": "ArrowJS with Stric",
   "devDependencies": {
-    "bun-types": "latest",
-    "esbuild": "^0.17.10",
-    "@stricjs/pages": "~1.0.2"
+    "@stricjs/pages": "~1.0.2",
+    "@types/html-minifier": "^4.0.2",
+    "bun-types": "latest"
   },
   "dependencies": {
     "@stricjs/utils": "~1.0.5",
-    "@arrow-js/core": ">=^1.0.0-alpha.8"
-  },
-  "peerDependencies": {
-    "esbuild": ">=^0.17.10"
+    "html-minifier": "^4.0.0",
+    "@arrow-js/core": ">=^1.0.0-alpha.8",
+    "esbuild": "^0.17.10"
   },
   "types": "types/index.d.ts",
   "keywords": ["bun", "stric"],
   "scripts": {
-    "build": "esbuild src/index.ts --bundle --format=esm --platform=node --minify --external:bun --external:@minify-html/node --external:esbuild --external:@arrow-js/core --external:@stricjs/utils --outfile=index.js && tsc --declaration --outDir types --emitDeclarationOnly"
+    "build": "esbuild src/index.ts --bundle --format=esm --platform=node --minify --external:bun --external:html-minifier --external:esbuild --external:@arrow-js/core --external:@stricjs/utils --outfile=index.js && tsc --declaration --outDir types --emitDeclarationOnly"
   },
   "exports": {
     ".": "./index.js",

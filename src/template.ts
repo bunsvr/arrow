@@ -1,19 +1,21 @@
 import { loadStyle } from "./utils";
+import Minifier from "html-minifier";
 
-function loadScript(props: {params?: string, script?: string}) {
-    return (props.params ? /*html*/`<script async>window.params = ${props.params}</script>` : "")
-        + (props.script ? /*html*/`<script async defer type="module" src="${props.script}"></script>` : "");
+function loadScript(script?: string) {
+    return script ? /*html*/`<script async defer type="module" src="${script}"></script>` : "";
 }
 
-function loadStyles(style?: string) {
-    return (style ?/*html*/`<link ${loadStyle(style)}/>` : "")
-        + /*html*/`
-            <script async defer>
-                for (let e of document.getElementsByClassName("__styles"))
-                    e.media="all"
-            </script>
-        `;
-}
+const opts: Minifier.Options = {
+    "minifyCSS": true,
+    "minifyJS": true,
+    "removeComments": true,
+    "collapseWhitespace": true,
+    "collapseInlineTagWhitespace": true,
+    "minifyURLs": true,
+    "removeTagWhitespace": true,
+    "collapseBooleanAttributes": true,
+    "caseSensitive": true,
+};
 
 export interface Template {
     /**
@@ -25,25 +27,27 @@ export interface Template {
      * Render the page with given stuff
      * @param props 
      */
-    render(props: {script?: string, style?: string, params?: Record<string, string>, head?: string}): string
+    render(props: {script?: string, style?: string, head?: string}): string
 }
 
 export default {
-    render(props: {script?: string, style?: string, params?: Record<string, string>, head?: string}) {
-        props.head ||= "";
-        const params = props.params && JSON.stringify(props.params); 
-    
-        return /*html*/`<!DOCTYPE html>
+    render(props: {script?: string, style?: string, head?: string}) {
+        return Minifier.minify(/*html*/`<!DOCTYPE html>
             <html lang="en">
                 <head>
                     <meta charset="utf-8" />
                     <meta name="viewport" content="width=device-width, initial-scale=1" />
-                    ${loadStyles(props.style)}
-                    ${loadScript({ params, script: props.script })}
+                    ${props.style ?
+                        /*html*/`<link ${loadStyle(props.style)}/>` 
+                        : ""
+                    }
+                    <globals-loader />
+                    <css-loader />
+                    ${loadScript(props.script)}
                     ${props.head || ""}
                 </head>
                 <body></body>
             </html>
-        `;
+        `, opts);
     }
 } as Template
