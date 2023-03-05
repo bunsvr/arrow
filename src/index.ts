@@ -5,8 +5,15 @@ import { stream } from "@stricjs/utils";
 import template, { Template } from "./template";
 import { existsSync } from "fs";
 import { appendFile, mkdir, rm } from "fs/promises";
-import { ArrowTemplate } from "@arrow-js/core";
-import { cssLoader, globalsLoader, opts, paramsScript, styleLoadScript } from "./constants";
+import { cssLoader, dynamicLoader, styleLoadScript } from "./constants";
+import { minify, paramsScript } from "./utils";
+
+// Options
+const opts = {
+    headers: { 
+        "content-type": "text/html"
+    }
+};
 
 // Delete all files in a dir
 async function clearDir(dir: string) {
@@ -127,10 +134,18 @@ export class PageRouter extends PRouter {
                     sourceFile = keys[i];
 
                 // Get head
-                let head = await import(route.source.replace(outDir, srcDir))
-                    .then(v => v?.head);
-                if (typeof head === "function")
-                    head = await head();
+                let { head, title } = await import(route.source.replace(outDir, srcDir)) || {};
+                // Validate exports types
+                {
+                    if (typeof head === "function")
+                        head = await head();
+                    if (typeof title === "function")
+                        title = await title();
+
+                    head ||= "";
+                    if (title)
+                        head += `<title>${title}</title>`;
+                }
 
                 // Get script
                 const script = pathUtils.resolve(sourceFile).replace(outDir, "");
@@ -139,24 +154,31 @@ export class PageRouter extends PRouter {
                 const css = metafile.outputs[sourceFile].cssBundle,
                     style = css && pathUtils.resolve(css).replace(outDir, "");
 
+                // Check for route type
                 if (route.type === "static") {
-                    const tmpl = template.render({
-                        script, style, head
-                    })
-                        .replace(globalsLoader, "")
+                    // Minify the loaded HTML
+                    const tmpl = minify(
+                        template.render({
+                            script, style, head
+                        })
+                    )
+                        .replace(dynamicLoader, "")
                         .replace(cssLoader, styleLoadScript);
 
-                    this.router.static("GET", route.path, () => 
+                    this.router.static("GET", route.path, () =>
                         new Response(tmpl, opts));
                 } else {
-                    const tmpl = template.render({
-                        script, style, head
-                    }).replace(cssLoader, styleLoadScript);
+                    // Minify the loaded HTML
+                    const tmpl = minify(
+                        template.render({
+                            script, style, head
+                        })
+                    ).replace(cssLoader, styleLoadScript);
 
                     this.router.dynamic("GET", route.path, req =>
                         new Response(
                             tmpl.replace(
-                                globalsLoader, 
+                                dynamicLoader,
                                 paramsScript(req.params)
                             ), opts
                         )
@@ -180,5 +202,4 @@ export class PageRouter extends PRouter {
 
 // Types
 export * from "./utils";
-export { Template };
-export type RenderFunction = () => ArrowTemplate;
+export * from "./constants";
