@@ -7,10 +7,40 @@ import { existsSync } from "fs";
 import { appendFile, mkdir, rm } from "fs/promises";
 import { cssLoader, dynamicLoader, styleLoadScript } from "./constants";
 import { minify, paramsScript } from "./utils";
+import { ArrowTemplate } from "@arrow-js/core";
+
+/**
+ * Render function type
+ */
+export type Render = () => ArrowTemplate;
+
+/**
+ * A property value type
+ */
+export type Property<T = string> = (() => T) | T;
+
+/**
+ * HTTP-Equiv value
+ */
+export type HttpEquiv = "content-security-policy" | "content-type" | "default-style" | "refresh";
+
+/**
+ * Meta value
+ */
+export interface MetaValue {
+    charset?: string;
+    httpEquiv?: HttpEquiv;
+    content?: string;
+}
+
+/**
+ * Meta value
+ */
+export type Meta = Property<Record<string, string | MetaValue>>;
 
 // Options
 const opts = {
-    headers: { 
+    headers: {
         "content-type": "text/html"
     }
 };
@@ -46,10 +76,13 @@ async function createFiles(routes: Route[], out: string, src: string, template: 
         const path = route.source.replace(src, out);
         paths.push(path);
 
+        // Support functional component and class component
         await appendFile(path, `
-            import { render } from "${route.source}";
-            const root = document.${template.root ? `querySelector(\`${template.root}\`)` : "body"};
-            render()(root);
+            import * as Page from "${route.source}";
+
+            (Page.render ? Page.render() : new Page.App().render())(
+                document.${template.root ? `querySelector(\`${template.root}\`)` : "body"}
+            );
         `);
 
         route.source = path;
@@ -134,17 +167,67 @@ export class PageRouter extends PRouter {
                     sourceFile = keys[i];
 
                 // Get head
-                let { head, title } = await import(route.source.replace(outDir, srcDir)) || {};
+                let {
+                    head = "",
+                    title = "Stric App",
+                    charset = "UTF-8",
+                    viewport = "width=device-width,initial-scale=1",
+                    description,
+                    meta
+                }: {
+                    head: Property
+                    title: Property,
+                    charset: Property,
+                    description: Property,
+                    viewport: Property
+                    meta: Meta
+                } = await import(route.source.replace(outDir, srcDir)) || {};
                 // Validate exports types
                 {
+                    // Check whether exports are callable
                     if (typeof head === "function")
                         head = await head();
                     if (typeof title === "function")
                         title = await title();
+                    if (typeof description === "function")
+                        description = await description();
+                    if (typeof charset === "function")
+                        charset = await charset();
+                    if (typeof viewport === "function")
+                        viewport = await viewport();
+                    if (typeof meta === "function")
+                        meta = await meta();
 
-                    head ||= "";
-                    if (title)
-                        head += `<title>${title}</title>`;
+                    // Add title and charset if charset is not set to "none"
+                    head += `
+                        ${charset !== "none"
+                            ? `<meta charset="${charset}" />` : ""}
+                        ${viewport !== "none"
+                            ? `<meta name="viewport" content="${viewport}" />` : ""}
+                        <title>${title}</title>
+                    `;
+                    if (description)
+                        head += `<meta name="description" content="${description}">`;
+                    if (meta)
+                        for (const key in meta) {
+                            // If key contains only content
+                            if (typeof meta[key] === "string")
+                                meta[key] = {
+                                    content: meta[key]
+                                } as MetaValue;
+
+                            // Add to head
+                            const pageMeta = meta[key] as MetaValue;
+                            head += `<meta 
+                                name="${key}" 
+                                ${pageMeta.charset ?
+                                    `charset="${pageMeta.charset}"` : ""}
+                                ${pageMeta.content ?
+                                    `content="${pageMeta.content}"` : ""}
+                                ${pageMeta.httpEquiv ?
+                                    `http-equiv="${pageMeta.httpEquiv}"` : ""}
+                            >`;
+                        }
                 }
 
                 // Get script
@@ -200,6 +283,6 @@ export class PageRouter extends PRouter {
     }
 }
 
-// Types
+// Types and utils
 export * from "./utils";
 export * from "./constants";
