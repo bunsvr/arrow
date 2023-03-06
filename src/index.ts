@@ -5,8 +5,7 @@ import { stream } from "@stricjs/utils";
 import template, { Template } from "./template";
 import { existsSync } from "fs";
 import { appendFile, mkdir, rm } from "fs/promises";
-import { cssLoader, dynamicLoader, styleLoadScript } from "./constants";
-import { minify, paramsScript } from "./utils";
+import { cssLoader, dynamicLoader, styleLoadScript, minify, paramsScript } from "./constants";
 import { ArrowTemplate } from "@arrow-js/core";
 
 /**
@@ -284,5 +283,4 @@ export class PageRouter extends PRouter {
 }
 
 // Types and utils
-export * from "./utils";
 export * from "./constants";

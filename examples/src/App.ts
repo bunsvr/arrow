@@ -1,5 +1,6 @@
 import { html, reactive } from "@arrow-js/core";
 import { Property } from "../..";
+import "./styles/index.css";
 
 // Code inside render function can directly use Web APIs 
 // This function is run right after the DOM finished loading

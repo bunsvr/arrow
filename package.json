@@ -17,7 +17,7 @@
   "types": "types/index.d.ts",
   "keywords": ["bun", "stric"],
   "scripts": {
-    "build": "esbuild src/index.ts --bundle --format=esm --platform=node --minify --external:bun --external:html-minifier --external:esbuild --external:@arrow-js/core --external:@stricjs/utils --outfile=index.js && tsc --declaration --outDir types --emitDeclarationOnly"
+    "build": "esbuild src/index.ts src/utils.ts --bundle --format=esm --platform=node --minify --external:bun --external:html-minifier --external:esbuild --external:@arrow-js/core --external:@stricjs/utils --outdir=. && tsc --declaration --outDir types --emitDeclarationOnly"
   },
   "exports": {
     ".": "./index.js",

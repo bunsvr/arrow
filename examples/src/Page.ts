@@ -5,6 +5,7 @@
 /// <reference types="../../global" />
 
 import { ReactiveProxy, html, reactive } from "@arrow-js/core";
+import "./styles/index.css";
 
 /**
  * Export a class

@@ -3,4 +3,5 @@ node_modules
 test
 bun.lockb
 index.js
+utils.js
 examples/out

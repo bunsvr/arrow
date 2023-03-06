@@ -1,5 +1,5 @@
 import { cssLoader, dynamicLoader } from "./constants";
-import { loadStyle, loadScript } from "./utils";
+import { loadStyle, loadScript } from "./constants";
 
 export interface Template {
     /**
