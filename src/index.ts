@@ -5,7 +5,7 @@ import { stream } from "@stricjs/utils";
 import template, { Template } from "./template";
 import { existsSync } from "fs";
 import { appendFile, mkdir, rm } from "fs/promises";
-import { cssLoader, dynamicLoader, styleLoadScript, minify, paramsScript } from "./constants";
+import { cssLoader, dynamicLoader, styleLoadScript, minify, paramsScript, loadStyle } from "./constants";
 import { ArrowTemplate } from "@arrow-js/core";
 
 /**
@@ -67,6 +67,20 @@ async function build(entries: string[], out: string, build: esbuild.BuildOptions
     });
 }
 
+// Build global CSS
+async function buildCSS(globalCSS: string, outdir: string, build: esbuild.BuildOptions) {
+    return esbuild.build({
+        minify: true,
+        bundle: true,
+        entryPoints: [globalCSS],
+        platform: "browser",
+        entryNames: "[dir]/[name].[hash]",
+        metafile: true,
+        outdir,
+        ...build
+    }).then(v => v?.metafile) as Promise<esbuild.Metafile>;
+}
+
 // Create files to render stuff
 async function createFiles(routes: Route[], out: string, src: string, template: Template) {
     const paths = [];
@@ -104,11 +118,13 @@ type Route = {
 export class PageRouter extends PRouter {
     private readonly routes: Route[];
     public readonly template: Template;
+    public readonly globalCSS: string;
 
     constructor(private readonly build: esbuild.BuildOptions = {}) {
         super();
 
         this.routes = [];
+        this.globalCSS = "styles/globals.css";
         this.template = template;
     }
     static(path: string, source: string) {
@@ -152,6 +168,14 @@ export class PageRouter extends PRouter {
             this.routes.map(v => v.source),
             outDir, this.build
         ).then(v => v.metafile) as esbuild.Metafile;
+
+        // Build css
+        const cssGlobalPath = pathUtils.join(srcDir, this.globalCSS);
+        const cssMeta = existsSync(cssGlobalPath) && await buildCSS(
+            cssGlobalPath,
+            outDir,
+            this.build
+        );
 
         // Delete uneccessary files
         await Promise.all(files.map(f => rm(f)));
@@ -227,6 +251,12 @@ export class PageRouter extends PRouter {
                                     `http-equiv="${pageMeta.httpEquiv}"` : ""}
                             >`;
                         }
+
+                    // Check for global CSS
+                    if (cssMeta) {
+                        const file = pathUtils.resolve(Object.keys(cssMeta.outputs)[0]);
+                        head += `<link ${loadStyle(file.replace(outDir, ""))} />`;
+                    }
                 }
 
                 // Get script

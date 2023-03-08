@@ -19,11 +19,11 @@ export default {
         return /*html*/`<!DOCTYPE html>
             <html lang="en">
                 <head>
-                    ${props.style ? `<link ${loadStyle(props.style)}/>` : ""}
                     ${dynamicLoader}
-                    ${cssLoader}
                     ${loadScript(props.script)}
                     ${props.head || ""}
+                    ${props.style ? `<link ${loadStyle(props.style)}/>` : ""}
+                    ${cssLoader}
                 </head>
                 <body></body>
             </html>

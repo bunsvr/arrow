@@ -1,8 +1,9 @@
 import { html } from "@arrow-js/core";
-import { Event, FormStates } from "../../utils";
+import { Event, createForm } from "../../utils";
+import "./styles/form.css";
 
 // Form state management
-const form = new FormStates<{
+const form = createForm<{
     name: string,
     pass: string
 }>();
@@ -11,8 +12,8 @@ const form = new FormStates<{
 function submit(e: Event<HTMLInputElement>) {
     e.preventDefault();
 
-    console.log("Username:", form.data.name);
-    console.log("Password:", form.data.pass);
+    console.log("Username:", form.name);
+    console.log("Password:", form.pass);
 }
 
 /**
