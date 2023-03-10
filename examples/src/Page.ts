@@ -4,36 +4,18 @@
 /// <reference lib="esnext" />
 /// <reference types="../../global" />
 
-import { ReactiveProxy, html, reactive } from "@arrow-js/core";
+import { html } from "@arrow-js/core";
 
-/**
- * Export a class
- */
 export class App {
-    /**
-     * Use this as a state for the app
-     */
-    data: ReactiveProxy<{ password: string }>;
-
-    /**
-     * Set default state
-     */
-    constructor() {
-        this.data = reactive({ password: "" });
-    }
-
-    /**
-     * Render the app
-     */
+    // Render the app
     render() {
-        return html`
-            <p>You are navigating on page: ${params.page}</p>
-            <input type="password" @input="${e => 
-                this.data.password = e.target.value
-            }" />
-            <p>Password: ${() => this.data.password}</p>
-        `;
+        return html`<p>${props.hello} You are navigating on page: <code>${params.page}</code></p>`;
     }
+}
+
+// Run on build and load props to client
+export function load() {
+    return { hello: "Welcome!"};
 }
 
 // Set title

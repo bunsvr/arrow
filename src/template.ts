@@ -1,4 +1,4 @@
-import { cssLoader, dynamicLoader } from "./constants";
+import { cssLoader, dynamicLoader, globalsLoader } from "./constants";
 import { loadStyle, loadScript } from "./constants";
 
 export interface Template {
@@ -20,6 +20,7 @@ export default {
             <html lang="en">
                 <head>
                     ${dynamicLoader}
+                    ${globalsLoader}
                     ${loadScript(props.script)}
                     ${props.head || ""}
                     ${props.style ? `<link ${loadStyle(props.style)}/>` : ""}

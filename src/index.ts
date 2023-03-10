@@ -5,13 +5,19 @@ import { stream } from "@stricjs/utils";
 import template, { Template } from "./template";
 import { existsSync } from "fs";
 import { appendFile, mkdir, rm } from "fs/promises";
-import { cssLoader, dynamicLoader, styleLoadScript, minify, paramsScript, loadStyle } from "./constants";
+import { cssLoader, dynamicLoader, styleLoadScript, minify, paramsScript, loadStyle, globalsLoader, serverPropsScript } from "./constants";
 import { ArrowTemplate } from "@arrow-js/core";
+import { builtinModules } from "module";
 
 /**
  * Render function type
  */
 export type Render = () => ArrowTemplate;
+
+/**
+ * Load function type
+ */
+export type Load<T = any> = () => T | Promise<T>;
 
 /**
  * A property value type
@@ -52,16 +58,28 @@ async function clearDir(dir: string) {
     await mkdir(dir);
 }
 
+// Build plugin
+const nodeModFilter = new RegExp(`^(${builtinModules.join('|')})(/|$)`);
+const nodePlugin: esbuild.Plugin = {
+    name: "node-remove-import",
+    setup(build) {
+        build.onResolve({ filter: nodeModFilter }, () => ({}));
+    },
+}
+
 // Build script
-async function build(entries: string[], out: string, build: esbuild.BuildOptions) {
+async function build(entries: string[], outdir: string, build: esbuild.BuildOptions) {
+    build.plugins ||= [];
+    build.plugins.push(nodePlugin);
+
     return esbuild.build({
-        minify: true,
         bundle: true,
         entryPoints: entries,
         entryNames: "[dir]/[name].[hash]",
-        outdir: out,
+        outdir,
         platform: "browser",
-        format: "esm",
+        format: "iife",
+        external: builtinModules,
         metafile: true,
         ...build
     });
@@ -196,13 +214,15 @@ export class PageRouter extends PRouter {
                     charset = "UTF-8",
                     viewport = "width=device-width,initial-scale=1",
                     description,
+                    load,
                     meta
                 }: {
                     head: Property
                     title: Property,
                     charset: Property,
                     description: Property,
-                    viewport: Property
+                    viewport: Property,
+                    load: Load,
                     meta: Meta
                 } = await import(route.source.replace(outDir, srcDir)) || {};
                 // Validate exports types
@@ -266,13 +286,19 @@ export class PageRouter extends PRouter {
                 const css = metafile.outputs[sourceFile].cssBundle,
                     style = css && pathUtils.resolve(css).replace(outDir, "");
 
+                // Get load data
+                const globalsScript = serverPropsScript(load && await load());
+
                 // Check for route type
                 if (route.type === "static") {
                     // Minify the loaded HTML
                     const tmpl = minify(
                         template.render({
                             script, style, head
-                        })
+                        }).replace(
+                            globalsLoader, 
+                            globalsScript
+                        )
                     )
                         .replace(dynamicLoader, "")
                         .replace(cssLoader, styleLoadScript);
@@ -285,9 +311,14 @@ export class PageRouter extends PRouter {
                         template.render({
                             script, style, head
                         })
-                    ).replace(cssLoader, styleLoadScript);
+                    )
+                        .replace(
+                            globalsLoader, 
+                            globalsScript
+                        )
+                        .replace(cssLoader, styleLoadScript);
 
-                    this.router.dynamic("GET", route.path, req =>
+                    this.router.dynamic("GET", route.path, async req => 
                         new Response(
                             tmpl.replace(
                                 dynamicLoader,

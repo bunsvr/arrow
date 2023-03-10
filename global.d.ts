@@ -3,12 +3,20 @@ interface Window {
      * Parsed parameter
      */
     readonly params: Record<string, string>;
+    /**
+     * Server-side props
+     */
+    readonly props: any;
 }
-
 /**
  * Parsed parameter
  */
 declare const params: Record<string, string>;
+
+/**
+ * Server-side props
+ */
+declare const props: any;
 
 // Enable searching for files
 declare module "*.css" { }

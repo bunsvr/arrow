@@ -2,6 +2,7 @@ import { Options, minify as mini } from "html-minifier";
 
 export const dynamicLoader = "<dynamic-loader>";
 export const cssLoader = "<css-loader>";
+export const globalsLoader = "<globals-loader>";
 export const styleLoadScript = /*html*/`<script async defer>for(let e of document.getElementsByClassName("__styles"))e.media="all"</script>`;
 
 /**
@@ -18,6 +19,14 @@ export function loadStyle(href: string) {
  */
 export function loadScript(script?: string) {
     return script ? /*html*/`<script async defer type="module" src="${script}"></script>` : "";
+}
+
+/**
+ * Load server-side props
+ * @param o 
+ */
+export function serverPropsScript(o?: object) {
+    return o ? `<script async>const props=${JSON.stringify(o)};window.props=props</script>` : "";
 }
 
 const opts: Options = {
