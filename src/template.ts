@@ -30,4 +30,4 @@ export default {
             </html>
         `;
     }
-} as Template
+} as Template;

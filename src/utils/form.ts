@@ -6,6 +6,9 @@
 import { DataSource, ReactiveProxy, reactive } from "@arrow-js/core";
 import { Event } from "./types";
 
+/**
+ * Form states management
+ */
 interface FormStates<T extends DataSource> {
     /**
      * Reactive data

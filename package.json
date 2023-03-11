@@ -1,6 +1,6 @@
 {
   "name": "@stricjs/arrow",
-  "version": "1.0.6-alpha.2",
+  "version": "1.0.6-alpha.3",
   "type": "module",
   "description": "ArrowJS with Stric",
   "devDependencies": {
@@ -9,10 +9,11 @@
     "bun-types": "latest"
   },
   "dependencies": {
-    "@stricjs/utils": "~1.0.5",
-    "html-minifier": "^4.0.0",
     "@arrow-js/core": ">=^1.0.0-alpha.8",
-    "esbuild": "^0.17.10"
+    "@stricjs/router": "~1.0.7",
+    "@stricjs/utils": "~1.0.5",
+    "esbuild": "^0.17.10",
+    "html-minifier": "^4.0.0"
   },
   "types": "types/index.d.ts",
   "keywords": ["bun", "stric"],

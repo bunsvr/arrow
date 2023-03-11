@@ -1,3 +1,18 @@
+interface Request<T = any> {
+    /**
+     * Parsed URL parameters. Only usable with RegExp routes.
+     */
+    readonly params: Parameters;
+    /**
+     * Request pathname
+     */
+    readonly path: string;
+    /**
+     * Data object to store some vars through middlewares
+     */
+    data?: T;
+}
+
 interface Window {
     /**
      * Parsed parameter

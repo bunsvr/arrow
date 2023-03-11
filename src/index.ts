@@ -12,7 +12,8 @@ import { builtinModules } from "module";
 /**
  * Render function type
  */
-export type Render = () => ArrowTemplate;
+export type Render<Arguments extends any[] = any[]> = 
+    (...args: Arguments) => ArrowTemplate;
 
 /**
  * Load function type
@@ -27,7 +28,8 @@ export type Property<T = string> = (() => T) | T;
 /**
  * HTTP-Equiv value
  */
-export type HttpEquiv = "content-security-policy" | "content-type" | "default-style" | "refresh";
+export type HttpEquiv = "content-security-policy" 
+    | "content-type" | "default-style" | "refresh";
 
 /**
  * Meta value
@@ -41,7 +43,9 @@ export interface MetaValue {
 /**
  * Meta value
  */
-export type Meta = Property<Record<string, string | MetaValue>>;
+export type Meta = Property<
+    Record<string, string | MetaValue>
+>;
 
 // Options
 const opts = {
@@ -139,6 +143,10 @@ export class PageRouter extends PRouter {
     public readonly template: Template;
     public readonly globalCSS: string;
 
+    /**
+     * Create an ArrowJS page router
+     * @param build 
+     */
     constructor(private readonly build: esbuild.BuildOptions = {}) {
         super();
 
