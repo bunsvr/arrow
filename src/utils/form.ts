@@ -13,7 +13,7 @@ interface FormStates<T extends DataSource> {
     readonly data: ReactiveProxy<T>;
 
     /**
-     * Get input listener of an input element from name
+     * Get input listener of an element from name
      * @param name 
      */
     input(name: string): (e: Event<HTMLInputElement>) => any;

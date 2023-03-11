@@ -17,7 +17,7 @@ export type Render = () => ArrowTemplate;
 /**
  * Load function type
  */
-export type Load<T = any> = () => T | Promise<T>;
+export type Load<T = any> = (req: Request) => T | Promise<T>;
 
 /**
  * A property value type
@@ -73,6 +73,7 @@ async function build(entries: string[], outdir: string, build: esbuild.BuildOpti
     build.plugins.push(nodePlugin);
 
     return esbuild.build({
+        minify: true,
         bundle: true,
         entryPoints: entries,
         entryNames: "[dir]/[name].[hash]",
@@ -286,25 +287,22 @@ export class PageRouter extends PRouter {
                 const css = metafile.outputs[sourceFile].cssBundle,
                     style = css && pathUtils.resolve(css).replace(outDir, "");
 
-                // Get load data
-                const globalsScript = serverPropsScript(load && await load());
-
                 // Check for route type
                 if (route.type === "static") {
                     // Minify the loaded HTML
                     const tmpl = minify(
                         template.render({
                             script, style, head
-                        }).replace(
-                            globalsLoader, 
-                            globalsScript
-                        )
+                        })
                     )
                         .replace(dynamicLoader, "")
                         .replace(cssLoader, styleLoadScript);
 
-                    this.router.static("GET", route.path, () =>
-                        new Response(tmpl, opts));
+                    this.router.static("GET", route.path, async req =>
+                        new Response(tmpl.replace(
+                            globalsLoader, 
+                            serverPropsScript(load && await load(req))
+                        ), opts));
                 } else {
                     // Minify the loaded HTML
                     const tmpl = minify(
@@ -312,10 +310,6 @@ export class PageRouter extends PRouter {
                             script, style, head
                         })
                     )
-                        .replace(
-                            globalsLoader, 
-                            globalsScript
-                        )
                         .replace(cssLoader, styleLoadScript);
 
                     this.router.dynamic("GET", route.path, async req => 
@@ -323,6 +317,9 @@ export class PageRouter extends PRouter {
                             tmpl.replace(
                                 dynamicLoader,
                                 paramsScript(req.params)
+                            ).replace(
+                                globalsLoader, 
+                                serverPropsScript(load && await load(req))
                             ), opts
                         )
                     );
