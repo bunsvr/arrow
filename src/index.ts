@@ -112,7 +112,7 @@ async function createFiles(routes: Route[], out: string, src: string, template: 
         await appendFile(path, `
             import * as Page from "${route.source}";
 
-            (Page.render ? Page.render() : new Page.App().render())(
+            (Page.render ? Page.render() : Page.App.render())(
                 document.${template.root ? `querySelector(\`${template.root}\`)` : "body"}
             );
         `);

@@ -1,7 +1,8 @@
 /// <reference types="../../global" />
 import { html } from "@arrow-js/core";
+import { Component } from "../../utils";
 
-export class App {
+export class App extends Component {
     // Render the app
     render() {
         return html`<p>
