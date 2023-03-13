@@ -10,6 +10,11 @@ import { ArrowTemplate } from "@arrow-js/core";
 import { builtinModules } from "module";
 
 /**
+ * Callback for `before()` and `after()` event
+ */
+export type RenderCallback = () => any;
+
+/**
  * Render function type
  */
 export type Render<Arguments extends any[] = any[]> = 
@@ -116,9 +121,11 @@ async function createFiles(routes: Route[], out: string, src: string, template: 
         await appendFile(path, `
             import * as Page from "${route.source}";
 
+            Page.before && Page.before();
             (Page.render ? Page.render() : Page.App.render())(
                 document.${template.root ? `querySelector(\`${template.root}\`)` : "body"}
             );
+            Page.after && Page.after();
         `);
 
         route.source = path;
@@ -251,15 +258,15 @@ export class PageRouter extends PRouter {
                         meta = await meta();
 
                     // Add title and charset if charset is not set to "none"
-                    head += `
+                    head = `
                         ${charset !== "none"
                             ? `<meta charset="${charset}" />` : ""}
                         ${viewport !== "none"
                             ? `<meta name="viewport" content="${viewport}" />` : ""}
                         <title>${title}</title>
-                    `;
+                    ` + head;
                     if (description)
-                        head += `<meta name="description" content="${description}">`;
+                        head = `<meta name="description" content="${description}">` + head;
                     if (meta)
                         for (const key in meta) {
                             // If key contains only content

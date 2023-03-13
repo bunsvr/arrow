@@ -1,3 +1,8 @@
+/// <reference no-default-lib="true" />
+/// <reference lib="dom" />
+/// <reference lib="dom.iterable" />
+/// <reference lib="esnext" />
+
 interface Request<T = any> {
     /**
      * Parsed URL parameters. Only usable with RegExp routes.
